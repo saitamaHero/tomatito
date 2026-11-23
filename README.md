@@ -96,6 +96,10 @@ Tomatito is free. If it helps you focus, you can support it by buying me a coffe
   <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy me a coffee" height="48" />
 </a>
 
+## Credits
+
+The logo was designed in collaboration with [Luis Graphic](https://www.behance.net/luisgraph1c).
+
 ## Built with
 
 [Tauri 2](https://tauri.app), [Vue 3](https://vuejs.org), TypeScript, Vite and Rust. The fonts are [DM Sans](https://fonts.google.com/specimen/DM+Sans) and [DM Mono](https://fonts.google.com/specimen/DM+Mono) (SIL Open Font License), and the icons are from [Lucide](https://lucide.dev) (ISC).
