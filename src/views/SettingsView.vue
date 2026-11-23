@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { Languages } from "@lucide/vue";
 import { computed, onMounted, reactive, ref, watch } from "vue";
 import { onBeforeRouteLeave, useRouter } from "vue-router";
 import AppButton from "../components/AppButton.vue";
@@ -9,11 +10,13 @@ import Stepper from "../components/Stepper.vue";
 import SwitchRow from "../components/SwitchRow.vue";
 import type { FloatView } from "../core/float";
 import { duration } from "../core/format";
+import { LOCALE_NAMES } from "../core/i18n";
 import {
   cycleMinutes,
   DEFAULT_SETTINGS,
   FLOAT_SIZE,
   FLOAT_WHEN,
+  LANGUAGES,
   LIMITS,
   matchesPreset,
   PRESETS,
@@ -21,7 +24,9 @@ import {
   type NumericSetting,
 } from "../core/settings";
 import type { Settings } from "../core/types";
+import { locale, m } from "../i18n";
 import { platform } from "../platform";
+import type { FloatProblem } from "../platform/types";
 import { useFocusStore } from "../stores/focus";
 import { useSettingsStore } from "../stores/settings";
 
@@ -32,7 +37,7 @@ const isDesktop = platform().kind === "desktop";
 
 const draft = reactive<Settings>({ ...store.values });
 
-const floatProblem = ref<string | null>(null);
+const floatProblem = ref<FloatProblem | null>(null);
 
 onMounted(async () => {
   floatProblem.value = await platform().floatProblem();
@@ -47,26 +52,40 @@ watch(
 const floatSample = computed<FloatView>(() => ({
   kind: "timer",
   tone: "focus",
-  label: "ENFOQUE",
+  label: m.value.float.focus,
   time: "14:32",
   progress: 0.42,
   running: true,
-  toggleLabel: "Pausar",
+  toggleLabel: m.value.toggle.running,
   done: 2,
   rounds: draft.rounds,
   compact: draft.floatSize === "compact",
+  lang: locale.value,
 }));
+
+const floatWhen = computed(() =>
+  FLOAT_WHEN.map((value) => ({ value, label: m.value.settings.floatWhenOption[value] })),
+);
+const floatSize = computed(() =>
+  FLOAT_SIZE.map((value) => ({ value, label: m.value.settings.floatSizeOption[value] })),
+);
+const languages = computed(() =>
+  LANGUAGES.map((value) => ({
+    value,
+    label: value === "system" ? m.value.settings.languageSystem : LOCALE_NAMES[value],
+  })),
+);
 
 const dirty = computed(() =>
   (Object.keys(draft) as (keyof Settings)[]).some((k) => draft[k] !== store.values[k]),
 );
 
-const rows: { key: NumericSetting; label: string; hint: string; unit: string; dot: string }[] = [
-  { key: "focus", label: "Enfoque", hint: "Duración de cada pomodoro", unit: " min", dot: "focus" },
-  { key: "short", label: "Descanso corto", hint: "Entre pomodoros", unit: " min", dot: "break" },
-  { key: "long", label: "Descanso largo", hint: "Al completar el ciclo", unit: " min", dot: "break" },
-  { key: "rounds", label: "Pomodoros por ciclo", hint: "Antes del descanso largo", unit: "", dot: "" },
-];
+const rows = [
+  { key: "focus", minutes: true, dot: "focus" },
+  { key: "short", minutes: true, dot: "break" },
+  { key: "long", minutes: true, dot: "break" },
+  { key: "rounds", minutes: false, dot: "" },
+] as const;
 
 function step(key: NumericSetting, direction: 1 | -1) {
   draft[key] = stepSetting(draft, key, direction);
@@ -91,29 +110,24 @@ async function save() {
 
 onBeforeRouteLeave(async () => {
   if (!dirty.value) return true;
-  return confirm({
-    title: "Hay cambios sin guardar",
-    body: "Si sales ahora, los ajustes se quedan como estaban.",
-    accept: "Salir sin guardar",
-    cancel: "Seguir editando",
-  });
+  return confirm(m.value.settings.unsaved);
 });
 </script>
 
 <template>
   <form class="settings" @submit.prevent="save">
     <header class="head">
-      <h1 class="page-title">Ajustes</h1>
-      <nav class="presets" aria-label="Plantillas">
+      <h1 class="page-title">{{ m.settings.title }}</h1>
+      <nav class="presets" :aria-label="m.settings.presets">
         <button
           v-for="preset in PRESETS"
-          :key="preset.label"
+          :key="preset.id"
           type="button"
           :class="['chip', { selected: matchesPreset(draft, preset.values) }]"
           :aria-pressed="matchesPreset(draft, preset.values)"
           @click="Object.assign(draft, preset.values)"
         >
-          {{ preset.label }}
+          {{ m.settings.preset[preset.id] }}
         </button>
       </nav>
     </header>
@@ -121,36 +135,36 @@ onBeforeRouteLeave(async () => {
     <div class="columns">
       <div class="stack">
         <section class="card times" aria-labelledby="h-times">
-          <h2 id="h-times" class="card-title">Tiempos</h2>
+          <h2 id="h-times" class="card-title">{{ m.settings.times }}</h2>
           <div v-for="row in rows" :key="row.key" class="time-row">
             <span class="texts">
               <span class="label">
-                <span :class="['dot', row.dot]" aria-hidden="true" />{{ row.label }}
+                <span :class="['dot', row.dot]" aria-hidden="true" />{{ m.settings.field[row.key].label }}
               </span>
-              <span class="hint">{{ row.hint }}</span>
+              <span class="hint">{{ m.settings.field[row.key].hint }}</span>
             </span>
             <Stepper
-              :label="row.label"
-              :display="`${draft[row.key]}${row.unit}`"
+              :label="m.settings.field[row.key].label"
+              :display="row.minutes ? m.minutes(draft[row.key]) : `${draft[row.key]}`"
               :can-dec="draft[row.key] > LIMITS[row.key].min"
               :can-inc="draft[row.key] < LIMITS[row.key].max"
               @step="step(row.key, $event)"
             />
           </div>
           <p class="cycle">
-            Un ciclo completo dura <strong>{{ duration(cycleMinutes(draft)) }}</strong>
+            {{ m.settings.cycle }} <strong>{{ duration(cycleMinutes(draft)) }}</strong>
           </p>
         </section>
 
         <section class="card goal" aria-labelledby="h-goal">
           <div class="texts">
-            <h2 id="h-goal" class="goal-title">Meta diaria</h2>
+            <h2 id="h-goal" class="goal-title">{{ m.settings.dailyGoal }}</h2>
             <span class="hint">
-              Pomodoros al día · {{ duration(draft.dailyGoal * draft.focus) }} de enfoque
+              {{ m.settings.dailyGoalHint(duration(draft.dailyGoal * draft.focus)) }}
             </span>
           </div>
           <Stepper
-            label="Meta diaria"
+            :label="m.settings.dailyGoal"
             :display="`${draft.dailyGoal}`"
             :can-dec="draft.dailyGoal > LIMITS.dailyGoal.min"
             :can-inc="draft.dailyGoal < LIMITS.dailyGoal.max"
@@ -159,44 +173,66 @@ onBeforeRouteLeave(async () => {
         </section>
 
         <section v-if="isDesktop" class="card" aria-labelledby="h-desktop">
-          <h2 id="h-desktop" class="card-title">Escritorio</h2>
+          <h2 id="h-desktop" class="card-title">{{ m.settings.desktop }}</h2>
           <SwitchRow
             v-model="draft.globalShortcut"
-            label="Atajo global"
-            hint="Ctrl/Cmd + Alt + Mayús + T empieza o pausa"
+            :label="m.settings.shortcut"
+            :hint="m.settings.shortcutHint"
           />
           <p v-if="store.shortcutError" class="error" role="alert">
-            El sistema no permitió el atajo: {{ store.shortcutError }}
+            {{ m.settings.shortcutProblem[store.shortcutError] }}
           </p>
+        </section>
+
+        <section class="card">
+          <!-- El icono se reconoce aunque el idioma no se entienda. -->
+          <h2 class="goal-title language">
+            <Languages :size="18" aria-hidden="true" />
+            {{ m.settings.language }}
+          </h2>
+          <ChipGroup
+            v-model="draft.language"
+            :label="m.settings.language"
+            label-hidden
+            :options="languages"
+          />
         </section>
       </div>
 
       <div class="stack">
         <section class="card" aria-labelledby="h-auto">
-          <h2 id="h-auto" class="card-title">Al terminar una fase</h2>
-          <SwitchRow v-model="draft.autoBreak" label="Empezar el descanso solo" />
-          <SwitchRow v-model="draft.autoFocus" label="Empezar el siguiente pomodoro solo" />
-          <SwitchRow v-model="draft.sound" label="Sonido al terminar" />
-          <SwitchRow v-model="draft.notify" label="Notificación del sistema" />
+          <h2 id="h-auto" class="card-title">{{ m.settings.whenPhaseEnds }}</h2>
+          <SwitchRow v-model="draft.autoBreak" :label="m.settings.autoBreak" />
+          <SwitchRow v-model="draft.autoFocus" :label="m.settings.autoFocus" />
+          <SwitchRow v-model="draft.sound" :label="m.settings.sound" />
+          <SwitchRow v-model="draft.notify" :label="m.settings.notify" />
         </section>
 
         <section v-if="isDesktop" class="card">
           <template v-if="floatProblem">
-            <h2 class="goal-title">Ventana flotante</h2>
-            <p class="hint">{{ floatProblem }}</p>
+            <h2 class="goal-title">{{ m.settings.float }}</h2>
+            <p class="hint">{{ m.settings.floatProblem[floatProblem] }}</p>
           </template>
           <template v-else>
             <SwitchRow
               v-model="draft.float"
               heading
-              label="Ventana flotante"
-              hint="El tiempo a la vista cuando usas otras apps"
+              :label="m.settings.float"
+              :hint="m.settings.floatHint"
             />
             <div v-if="draft.float" class="float-options">
-              <ChipGroup v-model="draft.floatWhen" label="Cuándo aparece" :options="FLOAT_WHEN" />
-              <ChipGroup v-model="draft.floatSize" label="Tamaño" :options="FLOAT_SIZE" />
+              <ChipGroup
+                v-model="draft.floatWhen"
+                :label="m.settings.floatWhen"
+                :options="floatWhen"
+              />
+              <ChipGroup
+                v-model="draft.floatSize"
+                :label="m.settings.floatSize"
+                :options="floatSize"
+              />
               <div aria-hidden="true">
-                <span class="legend">Vista previa</span>
+                <span class="legend">{{ m.settings.floatPreview }}</span>
                 <div class="preview" inert>
                   <FloatPill :view="floatSample" />
                 </div>
@@ -208,8 +244,8 @@ onBeforeRouteLeave(async () => {
     </div>
 
     <footer class="foot">
-      <AppButton variant="ghost" @click="restoreClassic">Restablecer valores clásicos</AppButton>
-      <AppButton type="submit" size="lg">Guardar</AppButton>
+      <AppButton variant="ghost" @click="restoreClassic">{{ m.settings.restore }}</AppButton>
+      <AppButton type="submit" size="lg">{{ m.settings.save }}</AppButton>
     </footer>
   </form>
 </template>
@@ -306,6 +342,12 @@ onBeforeRouteLeave(async () => {
   display: flex;
   align-items: center;
   gap: var(--space-3);
+}
+
+.language {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .goal-title {

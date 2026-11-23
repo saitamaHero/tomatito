@@ -9,6 +9,7 @@ import SessionRow from "../components/SessionRow.vue";
 import StatTile from "../components/StatTile.vue";
 import { duration, startOfDay, toMinutes } from "../core/format";
 import { computeStats, groupByDay, sessionsInRange, type Range } from "../core/stats";
+import { m } from "../i18n";
 import { useFocusStore } from "../stores/focus";
 import { useSettingsStore } from "../stores/settings";
 
@@ -16,17 +17,18 @@ const route = useRoute();
 const focus = useFocusStore();
 const settings = useSettingsStore();
 
-const ranges: { id: Range; label: string }[] = [
-  { id: "week", label: "7 días" },
-  { id: "month", label: "30 días" },
-];
+const ranges: Range[] = ["week", "month"];
 
 const range = ref<Range>("week");
 // El día y no la hora: así no se recalcula en cada tick.
 const today = computed(() => startOfDay(focus.nowTs));
-const stats = computed(() => computeStats(focus.allSessions, range.value, today.value));
+const stats = computed(() => computeStats(focus.allSessions, range.value, today.value, m.value));
 const groups = computed(() =>
-  groupByDay(sessionsInRange(focus.allSessions, range.value, today.value), today.value),
+  groupByDay(
+    sessionsInRange(focus.allSessions, range.value, today.value),
+    today.value,
+    m.value,
+  ),
 );
 
 const chosen = computed(() => focus.allSessions.find((s) => s.id === route.params.id));
@@ -37,32 +39,32 @@ const shown = computed(() => chosen.value ?? groups.value[0]?.sessions[0]);
   <div :class="['history', { 'has-chosen': chosen }]">
     <section class="list" aria-labelledby="h-history">
       <header class="head">
-        <h1 id="h-history" class="page-title">Historial</h1>
-        <nav class="ranges" aria-label="Periodo">
+        <h1 id="h-history" class="page-title">{{ m.history.title }}</h1>
+        <nav class="ranges" :aria-label="m.history.ranges">
           <button
-            v-for="r in ranges"
-            :key="r.id"
+            v-for="id in ranges"
+            :key="id"
             type="button"
-            :class="['chip', { selected: r.id === range }]"
-            :aria-pressed="r.id === range"
-            @click="range = r.id"
+            :class="['chip', { selected: id === range }]"
+            :aria-pressed="id === range"
+            @click="range = id"
           >
-            {{ r.label }}
+            {{ m.history.range[id] }}
           </button>
         </nav>
       </header>
 
       <template v-if="groups.length">
-        <div class="stats" role="group" aria-label="Resumen">
-          <StatTile :value="`${stats.pomodoros}`" label="Pomodoros" />
-          <StatTile :value="duration(toMinutes(stats.focusMs))" label="De enfoque" />
-          <StatTile :value="`${stats.goalsDone}/${stats.goalsTotal}`" label="Objetivos" />
+        <div class="stats" role="group" :aria-label="m.history.summary">
+          <StatTile :value="`${stats.pomodoros}`" :label="m.history.pomodoros" />
+          <StatTile :value="duration(toMinutes(stats.focusMs))" :label="m.history.focusTime" />
+          <StatTile :value="`${stats.goalsDone}/${stats.goalsTotal}`" :label="m.history.goals" />
         </div>
 
         <section class="card chart-card" aria-labelledby="h-chart">
           <header class="head">
-            <h2 id="h-chart" class="chart-title">Pomodoros</h2>
-            <span class="hint">{{ range === "week" ? "Por día" : "Por semana" }}</span>
+            <h2 id="h-chart" class="chart-title">{{ m.history.pomodoros }}</h2>
+            <span class="hint">{{ m.history.per[range] }}</span>
           </header>
           <BarChart
             :bars="stats.bars"
@@ -70,7 +72,7 @@ const shown = computed(() => chosen.value ?? groups.value[0]?.sessions[0]);
           />
         </section>
 
-        <section class="days" aria-label="Sesiones">
+        <section class="days" :aria-label="m.history.sessions">
           <div v-for="day in groups" :key="day.key" class="day">
             <h2 class="caption">{{ day.label }}</h2>
             <SessionRow
@@ -84,22 +86,18 @@ const shown = computed(() => chosen.value ?? groups.value[0]?.sessions[0]);
       </template>
 
       <div v-else class="empty">
-        <p class="display">Nada por aquí todavía</p>
+        <p class="display">{{ m.history.emptyTitle }}</p>
         <p class="muted">
-          {{
-            focus.allSessions.length
-              ? "No hay sesiones en este periodo."
-              : "Cuando termines tu primer pomodoro, la sesión aparecerá aquí."
-          }}
+          {{ focus.allSessions.length ? m.history.emptyRange : m.history.emptyEver }}
         </p>
-        <AppButton :to="{ name: 'timer' }">Ir al temporizador</AppButton>
+        <AppButton :to="{ name: 'timer' }">{{ m.history.goToTimer }}</AppButton>
       </div>
     </section>
 
     <aside v-if="shown" class="side">
       <RouterLink class="back" :to="{ name: 'history' }">
         <ChevronLeft :size="20" aria-hidden="true" />
-        Historial
+        {{ m.history.title }}
       </RouterLink>
       <SessionDetail :key="shown.id" :session="shown" />
     </aside>

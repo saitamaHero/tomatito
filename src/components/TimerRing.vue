@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { computed } from "vue";
-import { clock, PHASE_LABEL } from "../core/format";
+import { clock } from "../core/format";
 import type { TimerState } from "../core/types";
+import { m } from "../i18n";
 import PomodoroDots from "./PomodoroDots.vue";
 
 const props = defineProps<{
@@ -22,7 +23,7 @@ const tone = computed(() => {
 </script>
 
 <template>
-  <section :class="['ring', tone]" aria-label="Temporizador">
+  <section :class="['ring', tone]" :aria-label="m.timer.label">
     <svg viewBox="0 0 280 280" aria-hidden="true">
       <circle class="track" cx="140" cy="140" :r="RADIUS" />
       <circle
@@ -36,7 +37,7 @@ const tone = computed(() => {
       />
     </svg>
     <div class="face">
-      <span class="caption phase">{{ PHASE_LABEL[timer.phase].toUpperCase() }}</span>
+      <span class="caption phase">{{ m.phase[timer.phase].toUpperCase() }}</span>
       <span class="digits mono" role="timer">{{ clock(remainingMs) }}</span>
       <PomodoroDots :done="done" :total="rounds" />
     </div>

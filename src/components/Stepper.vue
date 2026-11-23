@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Minus, Plus } from "@lucide/vue";
+import { m } from "../i18n";
 
 defineProps<{
   label: string;
@@ -15,7 +16,7 @@ defineEmits<{ step: [direction: 1 | -1] }>();
   <div class="stepper" role="group" :aria-label="label">
     <button
       type="button"
-      :aria-label="`Bajar ${label.toLowerCase()}`"
+      :aria-label="m.settings.decrease(label)"
       :disabled="!canDec"
       @click="$emit('step', -1)"
     >
@@ -24,7 +25,7 @@ defineEmits<{ step: [direction: 1 | -1] }>();
     <output class="mono" aria-live="polite">{{ display }}</output>
     <button
       type="button"
-      :aria-label="`Subir ${label.toLowerCase()}`"
+      :aria-label="m.settings.increase(label)"
       :disabled="!canInc"
       @click="$emit('step', 1)"
     >

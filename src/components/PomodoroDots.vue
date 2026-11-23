@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { m } from "../i18n";
+
 withDefaults(defineProps<{ done: number; total: number; size?: number }>(), { size: 10 });
 </script>
 
@@ -6,7 +8,7 @@ withDefaults(defineProps<{ done: number; total: number; size?: number }>(), { si
   <div
     class="dots"
     role="img"
-    :aria-label="`${done} de ${total} pomodoros completados`"
+    :aria-label="m.dots(done, total)"
     :style="{ '--dot': `${size}px` }"
   >
     <span v-for="i in total" :key="i" :class="['dot', { on: i <= done }]" />

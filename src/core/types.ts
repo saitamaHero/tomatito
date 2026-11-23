@@ -4,6 +4,9 @@ export type Phase = "focus" | "short" | "long";
 export type FloatWhen = "always" | "focus" | "running";
 export type FloatSize = "normal" | "compact";
 
+/** `system`: el del equipo. */
+export type Language = "system" | "es" | "en";
+
 export interface Settings {
   /** Minutos. */
   focus: number;
@@ -23,6 +26,7 @@ export interface Settings {
   float: boolean;
   floatWhen: FloatWhen;
   floatSize: FloatSize;
+  language: Language;
 }
 
 export interface Goal {

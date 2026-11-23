@@ -26,6 +26,7 @@ function view(
     {
       background: true,
       finished: null,
+      lang: "es",
       remainingMs: remainingAt(state.timer, now),
       ...context,
     },
@@ -87,6 +88,7 @@ describe("el tiempo", () => {
       done: 0,
       rounds: 4,
       compact: false,
+      lang: "es",
     });
   });
 
@@ -129,6 +131,7 @@ describe("fin de fase", () => {
       title: "Pomodoro 3 terminado",
       body: "Toca para descansar 5 min",
       action: "Descansar",
+      lang: "es",
     });
   });
 
@@ -140,6 +143,7 @@ describe("fin de fase", () => {
       title: "Descanso terminado",
       body: "Toca para el pomodoro 4 de 4",
       action: "Empezar",
+      lang: "es",
     });
   });
 

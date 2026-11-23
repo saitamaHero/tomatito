@@ -1,4 +1,4 @@
-import type { FloatSize, FloatWhen, Phase, Settings } from "./types";
+import type { FloatSize, FloatWhen, Language, Phase, Settings } from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
   focus: 25,
@@ -14,18 +14,12 @@ export const DEFAULT_SETTINGS: Settings = {
   float: true,
   floatWhen: "always",
   floatSize: "normal",
+  language: "system",
 };
 
-export const FLOAT_WHEN: { value: FloatWhen; label: string }[] = [
-  { value: "always", label: "Al salir de la app" },
-  { value: "focus", label: "Solo en enfoque" },
-  { value: "running", label: "Solo si corre el tiempo" },
-];
-
-export const FLOAT_SIZE: { value: FloatSize; label: string }[] = [
-  { value: "normal", label: "Normal" },
-  { value: "compact", label: "Compacta" },
-];
+export const FLOAT_WHEN: FloatWhen[] = ["always", "focus", "running"];
+export const FLOAT_SIZE: FloatSize[] = ["normal", "compact"];
+export const LANGUAGES: Language[] = ["system", "es", "en"];
 
 export type NumericSetting = "focus" | "short" | "long" | "rounds" | "dailyGoal";
 
@@ -39,10 +33,10 @@ export const LIMITS: Record<NumericSetting, { min: number; max: number; step: nu
 
 type Times = Pick<Settings, "focus" | "short" | "long" | "rounds">;
 
-export const PRESETS: { label: string; values: Times }[] = [
-  { label: "Clásico 25/5", values: { focus: 25, short: 5, long: 15, rounds: 4 } },
-  { label: "Profundo 50/10", values: { focus: 50, short: 10, long: 30, rounds: 3 } },
-  { label: "Ágil 15/3", values: { focus: 15, short: 3, long: 10, rounds: 4 } },
+export const PRESETS: { id: "classic" | "deep" | "quick"; values: Times }[] = [
+  { id: "classic", values: { focus: 25, short: 5, long: 15, rounds: 4 } },
+  { id: "deep", values: { focus: 50, short: 10, long: 30, rounds: 3 } },
+  { id: "quick", values: { focus: 15, short: 3, long: 10, rounds: 4 } },
 ];
 
 export function matchesPreset(s: Settings, p: Times): boolean {
@@ -72,11 +66,8 @@ export function normalizeSettings(stored: Partial<Settings> | null | undefined):
       ? Math.min(max, Math.max(min, Math.round(value)))
       : DEFAULT_SETTINGS[key];
   }
-  if (!FLOAT_WHEN.some((o) => o.value === merged.floatWhen)) {
-    merged.floatWhen = DEFAULT_SETTINGS.floatWhen;
-  }
-  if (!FLOAT_SIZE.some((o) => o.value === merged.floatSize)) {
-    merged.floatSize = DEFAULT_SETTINGS.floatSize;
-  }
+  if (!FLOAT_WHEN.includes(merged.floatWhen)) merged.floatWhen = DEFAULT_SETTINGS.floatWhen;
+  if (!FLOAT_SIZE.includes(merged.floatSize)) merged.floatSize = DEFAULT_SETTINGS.floatSize;
+  if (!LANGUAGES.includes(merged.language)) merged.language = DEFAULT_SETTINGS.language;
   return merged;
 }

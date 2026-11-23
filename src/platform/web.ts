@@ -22,6 +22,8 @@ export const platform: Platform = {
     document.title = text ? `${text} · Tomatito` : "Tomatito";
   },
 
+  setLabels() {},
+
   onAction() {},
 
   onBackground() {},

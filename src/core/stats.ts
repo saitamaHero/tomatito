@@ -1,4 +1,5 @@
-import { addDays, dayHeading, shortDate, startOfDay, WEEKDAY_INITIALS } from "./format";
+import { addDays, dayHeading, shortDate, startOfDay } from "./format";
+import type { Messages } from "./i18n";
 import { goalsDone } from "./session";
 import type { Session } from "./types";
 
@@ -40,7 +41,12 @@ function mondayOf(ts: number): number {
   return addDays(day, -((new Date(day).getDay() + 6) % 7));
 }
 
-export function computeStats(sessions: Session[], range: Range, now: number): Stats {
+export function computeStats(
+  sessions: Session[],
+  range: Range,
+  now: number,
+  m: Messages,
+): Stats {
   const from = rangeStart(range, now);
   const today = startOfDay(now);
   const focus = focusSegments(sessions, from);
@@ -59,9 +65,9 @@ export function computeStats(sessions: Session[], range: Range, now: number): St
     const current = key === currentKey;
     let label: string;
     if (range === "week") {
-      label = current ? "Hoy" : WEEKDAY_INITIALS[new Date(key).getDay()];
+      label = current ? m.history.chartToday : m.date.initials[new Date(key).getDay()];
     } else {
-      label = current ? "Esta sem." : shortDate(Math.max(key, from));
+      label = current ? m.history.chartThisWeek : shortDate(Math.max(key, from), m);
     }
     return { label, value, current };
   });
@@ -86,7 +92,7 @@ export interface DayGroup {
 }
 
 /** Agrupa por día de inicio, lo más reciente primero. */
-export function groupByDay(sessions: Session[], now: number): DayGroup[] {
+export function groupByDay(sessions: Session[], now: number, m: Messages): DayGroup[] {
   const groups = new Map<number, Session[]>();
   const started = sessions.filter((s) => s.startedAt !== null);
   for (const s of started.sort((a, b) => b.startedAt! - a.startedAt!)) {
@@ -95,7 +101,7 @@ export function groupByDay(sessions: Session[], now: number): DayGroup[] {
   }
   return [...groups].map(([key, list]) => ({
     key,
-    label: dayHeading(key, now),
+    label: dayHeading(key, now, m),
     sessions: list,
   }));
 }

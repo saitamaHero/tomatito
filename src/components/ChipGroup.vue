@@ -1,14 +1,19 @@
 <script setup lang="ts" generic="T extends string">
 import { useId } from "vue";
 
-defineProps<{ label: string; options: { value: T; label: string }[] }>();
+defineProps<{
+  label: string;
+  options: { value: T; label: string }[];
+  /** La etiqueta ya se lee en el título de la tarjeta. */
+  labelHidden?: boolean;
+}>();
 const selected = defineModel<T>({ required: true });
 const name = useId();
 </script>
 
 <template>
   <fieldset class="group">
-    <legend class="legend">{{ label }}</legend>
+    <legend :class="labelHidden ? 'visually-hidden' : 'legend'">{{ label }}</legend>
     <div class="options">
       <label
         v-for="option in options"

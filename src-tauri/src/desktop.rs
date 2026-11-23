@@ -1,10 +1,10 @@
 //! Bandeja, atajo global y ventana. El reloj vive en el frontend: aquí solo se
 //! pinta el estado que manda `update_tray` y se devuelven acciones con el evento
-//! `desktop-action`.
+//! `desktop-action`. Tampoco hay traducciones: el texto llega con `set_labels`.
 
-use std::{fs, io};
+use std::{fs, io, sync::Mutex};
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use tauri::{
     AppHandle, Emitter, Manager, Window, WindowEvent, Wry,
     menu::{CheckMenuItem, IsMenuItem, Menu, MenuItem, PredefinedMenuItem},
@@ -30,6 +30,38 @@ pub struct Status {
     float_on: bool,
 }
 
+/// Igual que `TrayLabels` en `src/platform/types.ts`.
+#[derive(Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Labels {
+    show: String,
+    quit: String,
+    float: String,
+    notice_title: String,
+    notice_body: String,
+}
+
+/// Aviso de la primera vez que se cierra la ventana: título y texto.
+pub struct Notice(Mutex<(String, String)>);
+
+impl Default for Notice {
+    fn default() -> Self {
+        Self(Mutex::new((
+            "Tomatito is still running".into(),
+            "To close it completely, use “Quit” in the tray.".into(),
+        )))
+    }
+}
+
+/// Motivo del rechazo del atajo. Igual que `ShortcutProblem` en `types.ts`.
+#[derive(Serialize)]
+#[serde(rename_all = "lowercase")]
+pub enum ShortcutProblem {
+    Wayland,
+    Taken,
+    Unknown,
+}
+
 /// Solo está en el estado de la app si la bandeja llegó a crearse.
 struct Tray {
     icon: TrayIcon,
@@ -37,17 +69,19 @@ struct Tray {
     toggle: MenuItem<Wry>,
     skip: MenuItem<Wry>,
     float: CheckMenuItem<Wry>,
+    show: MenuItem<Wry>,
+    quit: MenuItem<Wry>,
 }
 
 pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
     // El tiempo va también en el menú: no todos los escritorios muestran texto
-    // junto al icono.
+    // junto al icono. El resto está en inglés solo hasta que llega `set_labels`.
     let time = MenuItem::with_id(app, "time", APP_NAME, false, None::<&str>)?;
-    let toggle = MenuItem::with_id(app, "toggle", "Empezar", true, None::<&str>)?;
-    let skip = MenuItem::with_id(app, "skip", "Terminar pomodoro", false, None::<&str>)?;
-    let float = CheckMenuItem::with_id(app, "float", "Ventana flotante", true, true, None::<&str>)?;
-    let show = MenuItem::with_id(app, "show", "Mostrar Tomatito", true, None::<&str>)?;
-    let quit = MenuItem::with_id(app, "quit", "Salir", true, None::<&str>)?;
+    let toggle = MenuItem::with_id(app, "toggle", "Start", true, None::<&str>)?;
+    let skip = MenuItem::with_id(app, "skip", "Finish pomodoro", false, None::<&str>)?;
+    let float = CheckMenuItem::with_id(app, "float", "Floating window", true, true, None::<&str>)?;
+    let show = MenuItem::with_id(app, "show", "Show Tomatito", true, None::<&str>)?;
+    let quit = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
     let separators = [
         PredefinedMenuItem::separator(app)?,
         PredefinedMenuItem::separator(app)?,
@@ -94,7 +128,21 @@ pub fn create_tray(app: &AppHandle) -> tauri::Result<()> {
         toggle,
         skip,
         float,
+        show,
+        quit,
     });
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_labels(app: AppHandle, labels: Labels) -> tauri::Result<()> {
+    if let Some(tray) = app.try_state::<Tray>() {
+        tray.show.set_text(&labels.show)?;
+        tray.quit.set_text(&labels.quit)?;
+        tray.float.set_text(&labels.float)?;
+    }
+    let notice = app.state::<Notice>();
+    *notice.0.lock().unwrap_or_else(|e| e.into_inner()) = (labels.notice_title, labels.notice_body);
     Ok(())
 }
 
@@ -148,22 +196,25 @@ fn toggle_shortcut() -> Shortcut {
 
 /// Al recargar el webview se vuelve a llamar con el atajo ya puesto: no es un error.
 #[tauri::command]
-pub fn set_global_shortcut(app: AppHandle, enabled: bool) -> Result<(), String> {
+pub fn set_global_shortcut(app: AppHandle, enabled: bool) -> Result<(), ShortcutProblem> {
     let shortcuts = app.global_shortcut();
     let shortcut = toggle_shortcut();
     if enabled == shortcuts.is_registered(shortcut) {
         return Ok(());
     }
     if !enabled {
-        return shortcuts.unregister(shortcut).map_err(|e| e.to_string());
+        return shortcuts.unregister(shortcut).map_err(|error| {
+            eprintln!("No se pudo quitar el atajo: {error}");
+            ShortcutProblem::Unknown
+        });
     }
     // En Wayland el registro va por XWayland: no falla, pero tampoco dispara.
     if is_wayland() {
-        return Err("en Wayland no hay atajos globales.".into());
+        return Err(ShortcutProblem::Wayland);
     }
     shortcuts.register(shortcut).map_err(|error| {
         eprintln!("No se pudo registrar el atajo: {error}");
-        "puede que otra aplicación ya lo use.".into()
+        ShortcutProblem::Taken
     })
 }
 
@@ -206,12 +257,9 @@ pub fn on_window_event(window: &Window, event: &WindowEvent) {
 fn notify_hidden_once(app: &AppHandle) {
     match mark_notice_shown(app) {
         Ok(true) => {
-            let shown = app
-                .notification()
-                .builder()
-                .title("Tomatito sigue abierto")
-                .body("El reloj no se detiene. Para cerrarlo del todo, usa «Salir» en la bandeja.")
-                .show();
+            let notice = app.state::<Notice>();
+            let (title, body) = notice.0.lock().unwrap_or_else(|e| e.into_inner()).clone();
+            let shown = app.notification().builder().title(title).body(body).show();
             if let Err(error) = shown {
                 eprintln!("No se pudo avisar: {error}");
             }

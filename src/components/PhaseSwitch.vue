@@ -1,13 +1,14 @@
 <script setup lang="ts">
-import { PHASE_LABEL, PHASES } from "../core/format";
+import { PHASES } from "../core/format";
 import type { Phase } from "../core/types";
+import { m } from "../i18n";
 
 defineProps<{ phase: Phase }>();
 defineEmits<{ pick: [phase: Phase] }>();
 </script>
 
 <template>
-  <nav class="switch" aria-label="Fase">
+  <nav class="switch" :aria-label="m.timer.phases">
     <button
       v-for="id in PHASES"
       :key="id"
@@ -16,7 +17,7 @@ defineEmits<{ pick: [phase: Phase] }>();
       :aria-pressed="id === phase"
       @click="id !== phase && $emit('pick', id)"
     >
-      {{ PHASE_LABEL[id] }}
+      {{ m.phase[id] }}
     </button>
   </nav>
 </template>

@@ -6,7 +6,7 @@ import {
   requestPermission,
   sendNotification,
 } from "@tauri-apps/plugin-notification";
-import type { DesktopAction, Platform } from "./types";
+import type { DesktopAction, FloatProblem, Platform, ShortcutProblem } from "./types";
 
 export const platform: Platform = {
   kind: "desktop",
@@ -21,6 +21,10 @@ export const platform: Platform = {
 
   setStatus(status) {
     invoke("update_tray", { status }).catch(console.error);
+  },
+
+  setLabels(labels) {
+    invoke("set_labels", { labels }).catch(console.error);
   },
 
   onAction(handler) {
@@ -45,7 +49,7 @@ export const platform: Platform = {
   },
 
   floatProblem() {
-    return invoke<string | null>("float_problem");
+    return invoke<FloatProblem | null>("float_problem");
   },
 
   async setGlobalShortcut(enabled) {
@@ -53,7 +57,8 @@ export const platform: Platform = {
       await invoke("set_global_shortcut", { enabled });
       return null;
     } catch (error) {
-      return String(error);
+      // Rust solo rechaza con uno de esos códigos.
+      return error as ShortcutProblem;
     }
   },
 };

@@ -1,21 +1,14 @@
 import { defineStore } from "pinia";
-import { computed, ref, shallowRef } from "vue";
+import { computed, ref, shallowRef, watch } from "vue";
 import { now } from "../core/clock";
 import { floatView } from "../core/float";
-import {
-  clock,
-  duration,
-  PHASE_LABEL,
-  plural,
-  startOfDay,
-  TOGGLE_LABEL,
-  toMinutes,
-} from "../core/format";
+import { clock, duration, startOfDay, toMinutes } from "../core/format";
 import * as goals from "../core/session";
 import { pomodorosToday } from "../core/stats";
 import * as engine from "../core/timer";
 import type { FocusState, Goal, Phase, Session } from "../core/types";
 import { repo } from "../data";
+import { locale, m } from "../i18n";
 import { platform } from "../platform";
 import { playChime, unlockChime } from "../platform/chime";
 import { startTicker } from "../platform/ticker";
@@ -46,8 +39,8 @@ export const useFocusStore = defineStore("focus", () => {
   const inProgress = computed(
     () => session.value.status === "active" && session.value.startedAt !== null,
   );
-  const toggleLabel = computed(() => TOGGLE_LABEL[timer.value.status]);
-  const skipLabel = computed(() => (isBreak.value ? "Saltar descanso" : "Terminar pomodoro"));
+  const toggleLabel = computed(() => m.value.toggle[timer.value.status]);
+  const skipLabel = computed(() => m.value.skip[isBreak.value ? "break" : "focus"]);
   const canSkip = computed(() => isBreak.value || timer.value.status !== "idle");
   const allSessions = computed<Session[]>(() =>
     inProgress.value && session.value.done > 0
@@ -72,6 +65,7 @@ export const useFocusStore = defineStore("focus", () => {
       background: background.value,
       remainingMs: remainingMs.value,
       finished: finished.value,
+      lang: locale.value,
     });
     const key = JSON.stringify(next);
     if (key === lastFloat) return;
@@ -95,7 +89,7 @@ export const useFocusStore = defineStore("focus", () => {
   function pushStatus() {
     const { phase, status } = timer.value;
     const text =
-      status === "idle" ? "" : `${clock(remainingMs.value)} · ${PHASE_LABEL[phase]}`;
+      status === "idle" ? "" : `${clock(remainingMs.value)} · ${m.value.phase[phase]}`;
     const next = {
       text,
       toggleLabel: toggleLabel.value,
@@ -145,17 +139,18 @@ export const useFocusStore = defineStore("focus", () => {
   function announce({ finished, archived, state: next }: engine.FinishResult) {
     if (settings.values.sound) playChime();
     if (!settings.values.notify) return;
+    const text = m.value.notification;
     let title: string;
     let body: string;
     if (archived) {
-      title = "¡Tomatito completo!";
-      body = `${plural(archived.done, "pomodoro", "pomodoros")} · ${toMinutes(goals.focusMs(archived))} min de enfoque`;
+      title = m.value.complete;
+      body = m.value.summary(archived.done, toMinutes(goals.focusMs(archived)));
     } else if (finished === "focus") {
-      title = "Pomodoro terminado";
-      body = `Toca descanso corto de ${duration(settings.values.short)}.`;
+      title = text.focusTitle;
+      body = text.focusBody(duration(settings.values.short));
     } else {
-      title = "Descanso terminado";
-      body = `Sigue el pomodoro ${next.session.done + 1} de ${next.session.rounds}.`;
+      title = text.breakTitle;
+      body = text.breakBody(next.session.done + 1, next.session.rounds);
     }
     platform().notify(title, body).catch(console.error);
   }
@@ -170,6 +165,16 @@ export const useFocusStore = defineStore("focus", () => {
 
     startTicker(tick);
     window.addEventListener("focus", rollover);
+    // La bandeja y la ventana flotante no son de Vue: al cambiar de idioma se les
+    // envía el texto otra vez.
+    watch(
+      m,
+      () => {
+        platform().setLabels(m.value.tray);
+        push();
+      },
+      { immediate: true },
+    );
     platform().onBackground(setBackground);
     platform().onAction((action) => {
       if (action === "toggle") toggle();

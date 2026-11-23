@@ -83,11 +83,11 @@ pub enum Action {
     Open,
 }
 
-/// Motivo si el sistema no la admite.
+/// Motivo si el sistema no la admite. Igual que `FloatProblem` en `types.ts`.
 #[tauri::command]
 pub fn float_problem() -> Option<&'static str> {
-    desktop::is_wayland()
-        .then_some("En Wayland una aplicación no puede quedarse encima de las demás.")
+    // Una aplicación de Wayland no puede quedarse encima de las demás.
+    desktop::is_wayland().then_some("wayland")
 }
 
 #[tauri::command]
@@ -128,7 +128,7 @@ pub fn update_float(app: AppHandle, view: Option<Value>) -> tauri::Result<()> {
 fn create(app: AppHandle) {
     thread::spawn(move || {
         let built = WebviewWindowBuilder::new(&app, LABEL, WebviewUrl::App("flotante.html".into()))
-            .title("Tomatito · Ventana flotante")
+            .title("Tomatito")
             .inner_size(212.0 + 2.0 * PAD, 78.0 + 2.0 * PAD)
             .visible(false)
             .decorations(false)

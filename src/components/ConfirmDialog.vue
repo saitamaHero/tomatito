@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { useTemplateRef, watch } from "vue";
+import { m } from "../i18n";
 import AppButton from "./AppButton.vue";
 import { pending } from "./confirm";
 
@@ -28,7 +29,7 @@ watch(
       <p class="text">{{ pending.body }}</p>
       <div class="actions">
         <AppButton variant="ghost" @click="pending.resolve(false)">
-          {{ pending.cancel ?? "Cancelar" }}
+          {{ pending.cancel ?? m.cancel }}
         </AppButton>
         <AppButton type="submit" autofocus>{{ pending.accept }}</AppButton>
       </div>

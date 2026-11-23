@@ -89,8 +89,9 @@ function sumMs(session: Session, kind: "focus" | "break"): number {
   return session.segments.reduce((sum, s) => (s.kind === kind ? sum + s.activeMs : sum), 0);
 }
 
-export function sessionTitle(session: Session): string {
-  return session.goals[0]?.text ?? "Sesión sin objetivos";
+/** null si no tuvo objetivos. */
+export function sessionTitle(session: Session): string | null {
+  return session.goals[0]?.text ?? null;
 }
 
 export function lastActivity(session: Session): number | null {

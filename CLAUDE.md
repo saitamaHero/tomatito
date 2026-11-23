@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `tomatito` is a Pomodoro timer for **desktop and web** from one codebase: a Vue 3 + TypeScript frontend (`src/`) built with Vite, and a Tauri 2 Rust backend (`src-tauri/`, edition 2024). Mobile is out of scope: no Android/iOS targets or touch layouts. Minimum supported width is 480 px.
 
-The UI text and code comments are in Spanish. Data is local only (IndexedDB on both platforms), with no accounts or sync.
+The app is in English and Spanish; code comments are in Spanish. Data is local only (IndexedDB on both platforms), with no accounts or sync.
 
 ## Commands
 
@@ -33,6 +33,12 @@ There is no frontend linter or formatter. TypeScript strictness (`strict`, `noUn
 
 **Layers.** `core/` is pure TypeScript with no Vue or DOM and holds every product rule, as transitions `(state, settings, now) → state`; tests live next to it. `data/` is the `Repository` interface and its IndexedDB implementation. `stores/` (Pinia) connects both to the UI. `platform/` hides what differs between desktop and web. `components/` and `views/` never import `@tauri-apps/*`: they go through `platform()`.
 
+**Text.** Every string the user can see lives in `core/i18n/es.ts` and `en.ts`; strings with values are functions, so each language owns its word order and plurals. `Messages` is the type of `es`, so a missing key or a wrong parameter fails `pnpm build`. Components and stores read `m` from `src/i18n.ts` (`{{ m.history.title }}`, `m.value` in scripts); `core/` functions take the messages or the locale as a parameter. A test in `core/i18n/i18n.test.ts` fails on text written directly in a template.
+- To add a language: its file, one line in `MESSAGES` and one in `LOCALE_NAMES` (`core/i18n/index.ts`), and its code in `Language` (`core/types.ts`) and `LANGUAGES` (`core/settings.ts`).
+- Stored data never holds translated text.
+- Rust has no translations: the frontend sends them (`set_labels`, `update_tray`), and Rust returns codes instead of messages (`ShortcutProblem`, `float_problem`). Its English strings are only fallbacks until the first call.
+- The floating window takes its language from `FloatView.lang`, since it doesn't read the settings.
+
 **Clock.** A running timer is defined by its absolute `endsAt`, never by counting ticks. A Web Worker (`platform/ticker.worker.ts`) only sets the pace, because browsers throttle timers in hidden pages. Always take the time from `now()` in `core/clock.ts`, not `Date.now()`.
 
 **State.** `FocusState` is the timer plus the active session. Every transition in `stores/focus.ts` goes through `commit`, which saves it, so closing the app loses nothing. Only one tab runs at a time: `main.ts` takes a Web Lock, because two would count the same pomodoro twice.
@@ -52,7 +58,7 @@ There is no frontend linter or formatter. TypeScript strictness (`strict`, `noUn
 - On Wayland it is disabled (`float_problem`), as is the global shortcut.
 - Its transparency needs `macOSPrivateApi`, which rules out the Mac App Store.
 
-**Closing** the main window hides it when the tray exists; quit from the tray's "Salir". The single-instance plugin must stay first in the builder; starting the app again shows the existing window, so a second copy exits at once with code 0.
+**Closing** the main window hides it when the tray exists; quit from the tray menu. The single-instance plugin must stay first in the builder; starting the app again shows the existing window, so a second copy exits at once with code 0.
 
 **Frontend → backend calls.** Each command is a `#[tauri::command]` function that must also be listed in `generate_handler![...]` in `lib.rs`. Command names, event names and argument keys are matched by string at runtime, so the type-checkers on both sides miss mismatches. Rust `snake_case` parameters are passed as `camelCase` keys from JS.
 

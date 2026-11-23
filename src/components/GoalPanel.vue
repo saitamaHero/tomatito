@@ -2,6 +2,7 @@
 import { Plus } from "@lucide/vue";
 import { computed, ref, useTemplateRef } from "vue";
 import { firstPending, goalsDone } from "../core/session";
+import { m } from "../i18n";
 import { useFocusStore } from "../stores/focus";
 import { useSettingsStore } from "../stores/settings";
 import { confirm } from "./confirm";
@@ -22,8 +23,8 @@ const next = computed(() =>
 );
 const title = computed(() =>
   locked.value && total.value > 0 && done.value === total.value
-    ? "Objetivos cumplidos"
-    : "Objetivos de la sesión",
+    ? m.value.goals.titleDone
+    : m.value.goals.title,
 );
 
 function add() {
@@ -35,13 +36,10 @@ function add() {
 async function end() {
   const { done: pomodoros } = focus.session;
   const ok = await confirm({
-    title: "Terminar sesión",
-    body:
-      pomodoros === 0
-        ? "Aún no hay pomodoros, así que no quedará en el historial. Tus objetivos pendientes se conservan."
-        : "Se guarda en el historial con lo hecho hasta ahora. La fase en curso no cuenta.",
-    accept: "Terminar sesión",
-    cancel: "Seguir",
+    title: m.value.goals.end,
+    body: pomodoros === 0 ? m.value.goals.endBodyEmpty : m.value.goals.endBody,
+    accept: m.value.goals.end,
+    cancel: m.value.goals.endCancel,
   });
   if (ok) focus.endSession();
 }
@@ -58,7 +56,7 @@ defineExpose({ focusInput: () => input.value?.focus() });
 
     <ul v-if="total" class="list">
       <template v-for="goal in focus.session.goals" :key="goal.id">
-        <li v-if="goal.id === next" class="next hint">Siguiente objetivo</li>
+        <li v-if="goal.id === next" class="next hint">{{ m.goals.next }}</li>
         <GoalItem
           :goal="goal"
           :locked="locked"
@@ -68,21 +66,21 @@ defineExpose({ focusInput: () => input.value?.focus() });
       </template>
     </ul>
     <p v-else class="empty hint">
-      {{ locked ? "Esta sesión no tuvo objetivos." : "Elige pocas cosas y que sean concretas." }}
+      {{ locked ? m.goals.emptyLocked : m.goals.empty }}
     </p>
 
     <form v-if="!locked" class="add" @submit.prevent="add">
-      <label for="new-goal" class="visually-hidden">Nuevo objetivo</label>
+      <label for="new-goal" class="visually-hidden">{{ m.goals.field }}</label>
       <input
         id="new-goal"
         ref="input"
         v-model="text"
         class="field"
         autocomplete="off"
-        placeholder="Añade un objetivo concreto"
+        :placeholder="m.goals.placeholder"
         @keydown.esc="input?.blur()"
       />
-      <button type="submit" class="plus" aria-label="Añadir objetivo">
+      <button type="submit" class="plus" :aria-label="m.goals.add">
         <Plus :size="20" aria-hidden="true" />
       </button>
     </form>
@@ -91,11 +89,11 @@ defineExpose({ focusInput: () => input.value?.focus() });
       <span
         class="count"
         role="img"
-        :aria-label="`Hoy ${focus.today} de ${settings.values.dailyGoal} pomodoros`"
+        :aria-label="m.goals.todayLabel(focus.today, settings.values.dailyGoal)"
       >
-        Hoy {{ focus.today }}/{{ settings.values.dailyGoal }}
+        {{ m.goals.today(focus.today, settings.values.dailyGoal) }}
       </span>
-      <AppButton v-if="focus.inProgress" variant="ghost" @click="end">Terminar sesión</AppButton>
+      <AppButton v-if="focus.inProgress" variant="ghost" @click="end">{{ m.goals.end }}</AppButton>
     </footer>
   </section>
 </template>

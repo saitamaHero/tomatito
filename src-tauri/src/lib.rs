@@ -21,8 +21,10 @@ pub fn run() {
                 .build(),
         )
         .manage(float::Float::default())
+        .manage(desktop::Notice::default())
         .invoke_handler(tauri::generate_handler![
             desktop::update_tray,
+            desktop::set_labels,
             desktop::set_global_shortcut,
             float::update_float,
             float::float_problem,

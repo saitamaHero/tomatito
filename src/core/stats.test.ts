@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { duration } from "./format";
+import { es } from "./i18n/es";
 import { cycleMinutes, DEFAULT_SETTINGS, normalizeSettings, stepSetting } from "./settings";
 import { computeStats, groupByDay, pomodorosToday } from "./stats";
 import type { Session } from "./types";
@@ -46,14 +47,14 @@ const sessions = [
 
 describe("estadísticas", () => {
   it("resume 7 días por día, con hoy al final", () => {
-    const stats = computeStats(sessions, "week", NOW);
+    const stats = computeStats(sessions, "week", NOW, es);
     expect(stats.bars.map((b) => b.label)).toEqual(["M", "X", "J", "V", "S", "D", "Hoy"]);
     expect(stats.bars.map((b) => b.value)).toEqual([3, 0, 0, 0, 0, 2, 4]);
     expect(stats).toMatchObject({ pomodoros: 9, focusMs: 225 * MIN, goalsDone: 5, goalsTotal: 7 });
   });
 
   it("resume 30 días por semana y las barras suman el total", () => {
-    const stats = computeStats(sessions, "month", NOW);
+    const stats = computeStats(sessions, "month", NOW, es);
     expect(stats.pomodoros).toBe(15);
     expect(stats.bars.reduce((sum, b) => sum + b.value, 0)).toBe(15);
     expect(stats.bars[0]).toMatchObject({ label: "25 oct", value: 1 });
@@ -66,7 +67,7 @@ describe("estadísticas", () => {
   });
 
   it("agrupa por día, lo más reciente primero", () => {
-    const groups = groupByDay(sessions, NOW);
+    const groups = groupByDay(sessions, NOW, es);
     expect(groups.slice(0, 3).map((g) => g.label)).toEqual([
       "HOY · LUNES 23 NOV",
       "AYER · DOMINGO 22 NOV",

@@ -5,6 +5,7 @@ import { useRouter } from "vue-router";
 import { dayName, hour, toMinutes } from "../core/format";
 import { breakMs, focusMs, goalsDone } from "../core/session";
 import type { Session } from "../core/types";
+import { m } from "../i18n";
 import { useFocusStore } from "../stores/focus";
 import AppButton from "./AppButton.vue";
 import { confirm } from "./confirm";
@@ -20,17 +21,13 @@ const router = useRouter();
 const isCurrent = computed(() => props.session.status === "active");
 const heading = computed(() => {
   const { startedAt, endedAt } = props.session;
-  const end = endedAt === null ? "EN CURSO" : hour(endedAt);
-  return `${dayName(startedAt!).toUpperCase()} · ${hour(startedAt!)} – ${end}`;
+  const end = endedAt === null ? m.value.history.inProgress : hour(endedAt);
+  return `${dayName(startedAt!, m.value)} · ${hour(startedAt!)} – ${end}`.toUpperCase();
 });
 
 async function repeat() {
   if (focus.inProgress) {
-    const ok = await confirm({
-      title: "Hay una sesión en curso",
-      body: "Se terminará tal como está y empezarás otra con estos objetivos.",
-      accept: "Terminar y repetir",
-    });
+    const ok = await confirm(m.value.detail.repeatConfirm);
     if (!ok) return;
   }
   focus.repeat(props.session);
@@ -43,24 +40,21 @@ async function repeat() {
     <h2 id="h-session" class="caption">{{ heading }}</h2>
     <p class="score">
       <span class="big mono">{{ session.done }}/{{ session.rounds }}</span>
-      <span class="muted">pomodoros</span>
+      <span class="muted">{{ m.detail.pomodoros }}</span>
     </p>
-    <p v-if="session.status === 'completed'" class="complete">¡Tomatito completo!</p>
+    <p v-if="session.status === 'completed'" class="complete">{{ m.complete }}</p>
 
     <div class="stats">
-      <StatTile :value="`${toMinutes(focusMs(session))}`" label="min enfoque" />
-      <StatTile :value="`${toMinutes(breakMs(session))}`" label="min descanso" />
-      <StatTile
-        :value="`${session.pauses}`"
-        :label="session.pauses === 1 ? 'pausa' : 'pausas'"
-      />
+      <StatTile :value="`${toMinutes(focusMs(session))}`" :label="m.detail.focusMinutes" />
+      <StatTile :value="`${toMinutes(breakMs(session))}`" :label="m.detail.breakMinutes" />
+      <StatTile :value="`${session.pauses}`" :label="m.detail.pauses(session.pauses)" />
     </div>
 
     <SessionTimeline class="block" :session="session" />
 
     <section v-if="session.goals.length" class="block card goals" aria-labelledby="h-goals">
       <header class="head">
-        <h3 id="h-goals" class="title">Objetivos</h3>
+        <h3 id="h-goals" class="title">{{ m.detail.goals }}</h3>
         <span class="count">{{ goalsDone(session) }}/{{ session.goals.length }}</span>
       </header>
       <ul>
@@ -70,7 +64,7 @@ async function repeat() {
 
     <AppButton v-if="!isCurrent" variant="outline" class="repeat" @click="repeat">
       <RotateCcw :size="18" aria-hidden="true" />
-      Repetir esta sesión
+      {{ m.detail.repeat }}
     </AppButton>
   </article>
 </template>

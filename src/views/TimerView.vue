@@ -7,10 +7,11 @@ import GoalPanel from "../components/GoalPanel.vue";
 import PhaseSwitch from "../components/PhaseSwitch.vue";
 import PomodoroDots from "../components/PomodoroDots.vue";
 import TimerRing from "../components/TimerRing.vue";
-import { plural, toMinutes } from "../core/format";
+import { toMinutes } from "../core/format";
 import { focusMs } from "../core/session";
 import { hasProgress } from "../core/timer";
 import type { Phase } from "../core/types";
+import { m } from "../i18n";
 import { useFocusStore } from "../stores/focus";
 import { useSettingsStore } from "../stores/settings";
 
@@ -21,43 +22,40 @@ const panel = useTemplateRef<InstanceType<typeof GoalPanel>>("panel");
 const breakMessage = computed(() => {
   const { done, rounds, status } = focus.session;
   return status === "active"
-    ? `Sigue el pomodoro ${done + 1} de ${rounds}.`
-    : "Después empieza una sesión nueva.";
+    ? m.value.timer.nextPomodoro(done + 1, rounds)
+    : m.value.timer.nextSession;
 });
 
-const summary = computed(
-  () =>
-    `${plural(focus.session.done, "pomodoro", "pomodoros")} · ${toMinutes(focusMs(focus.session))} min de enfoque`,
+const summary = computed(() =>
+  m.value.summary(focus.session.done, toMinutes(focusMs(focus.session))),
 );
 
 function confirmDiscard(accept: string) {
   return confirm({
-    title: "La fase en curso no contará",
-    body: "El tiempo que llevas en esta fase se descarta.",
+    title: m.value.timer.discard.title,
+    body: m.value.timer.discard.body,
     accept,
-    cancel: "Seguir aquí",
+    cancel: m.value.timer.discard.cancel,
   });
 }
 
 async function pick(phase: Phase) {
-  if (hasProgress(focus.timer) && !(await confirmDiscard("Cambiar de fase"))) return;
+  const discard = m.value.timer.discard.changePhase;
+  if (hasProgress(focus.timer) && !(await confirmDiscard(discard))) return;
   focus.pickPhase(phase);
 }
 
 /* Una tecla suelta no debe tirar ni cerrar un pomodoro: con teclado se confirma. */
 async function resetFromKeyboard() {
-  if (!hasProgress(focus.timer) || !(await confirmDiscard("Reiniciar"))) return;
+  if (!hasProgress(focus.timer)) return;
+  if (!(await confirmDiscard(m.value.timer.discard.reset))) return;
   focus.reset();
 }
 
 async function skipFromKeyboard() {
   if (!focus.canSkip) return;
   if (!focus.isBreak) {
-    const ok = await confirm({
-      title: "Terminar pomodoro",
-      body: "Cuenta como hecho, con los minutos que llevas.",
-      accept: "Terminar",
-    });
+    const ok = await confirm(m.value.timer.finish);
     if (!ok) return;
   }
   focus.skip();
@@ -94,19 +92,21 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
     <Transition name="fade" mode="out-in">
       <section v-if="focus.celebrating" key="done" class="stage" aria-live="polite">
         <PomodoroDots :done="focus.session.done" :total="focus.session.rounds" :size="20" />
-        <h2 class="display">¡Tomatito completo!</h2>
+        <h2 class="display">{{ m.complete }}</h2>
         <p class="muted">{{ summary }}</p>
         <AppButton variant="leaf" size="lg" class="long" @click="focus.toggle()">
           <Play :size="18" aria-hidden="true" />
-          Empezar descanso largo · {{ settings.values.long }} min
+          {{ m.timer.startLong(settings.values.long) }}
         </AppButton>
         <div class="row">
-          <AppButton variant="outline" @click="focus.endSession()">Nueva sesión</AppButton>
+          <AppButton variant="outline" @click="focus.endSession()">
+            {{ m.timer.newSession }}
+          </AppButton>
           <AppButton
             variant="ghost"
             :to="{ name: 'history', params: { id: focus.session.id } }"
           >
-            Ver resumen
+            {{ m.timer.viewSummary }}
           </AppButton>
         </div>
       </section>
@@ -123,7 +123,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
 
         <div v-if="focus.isBreak" class="controls column">
           <p class="muted">
-            Levántate, estira y bebe agua.<br />
+            {{ m.timer.breakHint }}<br />
             {{ breakMessage }}
           </p>
           <AppButton variant="leaf" size="lg" @click="focus.toggle()">
@@ -132,7 +132,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
           </AppButton>
           <AppButton variant="ghost" class="skip" @click="focus.skip()">
             <SkipForward :size="16" aria-hidden="true" />
-            Saltar descanso
+            {{ m.skip.break }}
           </AppButton>
         </div>
 
@@ -140,14 +140,18 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
           <AppButton
             variant="outline"
             icon
-            aria-label="Reiniciar"
-            title="Reiniciar (R)"
+            :aria-label="m.timer.reset"
+            :title="m.timer.withKey(m.timer.reset, 'R')"
             :disabled="focus.timer.status === 'idle'"
             @click="focus.reset()"
           >
             <RotateCcw :size="20" aria-hidden="true" />
           </AppButton>
-          <AppButton size="lg" :title="`${focus.toggleLabel} (Espacio)`" @click="focus.toggle()">
+          <AppButton
+            size="lg"
+            :title="m.timer.withKey(focus.toggleLabel, m.timer.space)"
+            @click="focus.toggle()"
+          >
             <component :is="focus.running ? Pause : Play" :size="18" aria-hidden="true" />
             {{ focus.toggleLabel }}
           </AppButton>
@@ -155,7 +159,7 @@ onBeforeUnmount(() => window.removeEventListener("keydown", onKeydown));
             variant="outline"
             icon
             :aria-label="focus.skipLabel"
-            :title="`${focus.skipLabel} (S)`"
+            :title="m.timer.withKey(focus.skipLabel, 'S')"
             :disabled="!focus.canSkip"
             @click="focus.skip()"
           >

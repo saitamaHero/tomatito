@@ -1,0 +1,226 @@
+import type { Messages } from "./es";
+
+const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
+
+export const en: Messages = {
+  minutes: (n) => `${n} min`,
+  cancel: "Cancel",
+  complete: "Tomatito complete!",
+
+  phase: { focus: "Focus", short: "Short break", long: "Long break" },
+  toggle: { idle: "Start", running: "Pause", paused: "Resume" },
+  skip: { focus: "Finish pomodoro", break: "Skip break" },
+  segment: { focus: "Focus", break: "Break" },
+
+  dots: (done, total) => `${done} of ${total} pomodoros done`,
+  summary: (pomodoros, minutes) =>
+    `${pomodoros} ${plural(pomodoros, "pomodoro", "pomodoros")} · ${minutes} min of focus`,
+
+  date: {
+    weekdays: ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"],
+    initials: ["S", "M", "T", "W", "T", "F", "S"],
+    months: [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    ],
+    short: (day, month) => `${month} ${day}`,
+    full: (weekday, day, month) => `${weekday}, ${month} ${day}`,
+    today: "today",
+    yesterday: "yesterday",
+  },
+
+  nav: {
+    label: "Main",
+    timer: "Timer",
+    history: "History",
+    settings: "Settings",
+    back: "Back to the timer",
+  },
+
+  timer: {
+    label: "Timer",
+    phases: "Phase",
+    breakHint: "Stand up, stretch and drink some water.",
+    nextPomodoro: (n, total) => `Next up: pomodoro ${n} of ${total}.`,
+    nextSession: "A new session starts after this.",
+    startLong: (minutes) => `Start long break · ${minutes} min`,
+    newSession: "New session",
+    viewSummary: "View summary",
+    reset: "Reset",
+    space: "Space",
+    withKey: (label, key) => `${label} (${key})`,
+    discard: {
+      title: "This phase won't count",
+      body: "The time you've spent in this phase will be discarded.",
+      changePhase: "Change phase",
+      reset: "Reset",
+      cancel: "Stay here",
+    },
+    finish: {
+      title: "Finish pomodoro",
+      body: "It counts as done, with the minutes you've put in.",
+      accept: "Finish",
+    },
+  },
+
+  goals: {
+    title: "Session goals",
+    titleDone: "Goals completed",
+    next: "Next goal",
+    empty: "Pick a few things and make them concrete.",
+    emptyLocked: "This session had no goals.",
+    field: "New goal",
+    placeholder: "Add a concrete goal",
+    add: "Add goal",
+    today: (n, total) => `Today ${n}/${total}`,
+    todayLabel: (n, total) => `Today, ${n} of ${total} pomodoros`,
+    end: "End session",
+    endBody: "What you've done so far is saved to your history. The current phase won't count.",
+    endBodyEmpty:
+      "There are no pomodoros yet, so it won't be saved to your history. Your pending goals are kept.",
+    endCancel: "Keep going",
+  },
+
+  goal: {
+    text: "Goal text",
+    pomodoros: "Pomodoros",
+    estimate: "Estimated pomodoros",
+    less: "Decrease estimate",
+    more: "Increase estimate",
+    save: "Save goal",
+    markDone: (text) => `Mark as done: ${text}`,
+    markPending: (text) => `Mark as pending: ${text}`,
+    edit: "Edit",
+    editLabel: (text) => `Edit: ${text}`,
+    remove: "Delete",
+    removeLabel: (text) => `Delete: ${text}`,
+    spent: (spent, est) => `${spent} of ${est} estimated pomodoros`,
+  },
+
+  history: {
+    title: "History",
+    ranges: "Period",
+    range: { week: "7 days", month: "30 days" },
+    summary: "Summary",
+    pomodoros: "Pomodoros",
+    focusTime: "Focus time",
+    goals: "Goals",
+    per: { week: "Per day", month: "Per week" },
+    sessions: "Sessions",
+    emptyTitle: "Nothing here yet",
+    emptyRange: "There are no sessions in this period.",
+    emptyEver: "When you finish your first pomodoro, the session will show up here.",
+    goToTimer: "Go to the timer",
+    untitled: "Session without goals",
+    inProgress: "In progress",
+    goalsDone: (done, total) => `${done}/${total} goals`,
+    chartToday: "Today",
+    chartThisWeek: "This wk",
+    chartGoal: (n) => `Goal ${n}`,
+    chartLabel: (bars, goal) =>
+      `Pomodoros: ${bars}` + (goal ? `. Daily goal: ${goal}` : ""),
+  },
+
+  detail: {
+    pomodoros: "pomodoros",
+    focusMinutes: "min focus",
+    breakMinutes: "min break",
+    pauses: (n) => plural(n, "pause", "pauses"),
+    timeline: "Timeline",
+    goals: "Goals",
+    repeat: "Repeat this session",
+    repeatConfirm: {
+      title: "There's a session in progress",
+      body: "It will end as it is, and you'll start another one with these goals.",
+      accept: "End and repeat",
+    },
+  },
+
+  settings: {
+    title: "Settings",
+    presets: "Presets",
+    preset: { classic: "Classic 25/5", deep: "Deep 50/10", quick: "Quick 15/3" },
+    times: "Times",
+    field: {
+      focus: { label: "Focus", hint: "Length of each pomodoro" },
+      short: { label: "Short break", hint: "Between pomodoros" },
+      long: { label: "Long break", hint: "When the cycle is complete" },
+      rounds: { label: "Pomodoros per cycle", hint: "Before the long break" },
+    },
+    decrease: (label) => `Decrease ${label.toLowerCase()}`,
+    increase: (label) => `Increase ${label.toLowerCase()}`,
+    cycle: "A full cycle takes",
+    dailyGoal: "Daily goal",
+    dailyGoalHint: (duration) => `Pomodoros per day · ${duration} of focus`,
+    whenPhaseEnds: "When a phase ends",
+    autoBreak: "Start the break automatically",
+    autoFocus: "Start the next pomodoro automatically",
+    sound: "Play a sound",
+    notify: "System notification",
+    float: "Floating window",
+    floatHint: "Keep the time in view while you use other apps",
+    floatWhen: "When it appears",
+    floatWhenOption: {
+      always: "When you leave the app",
+      focus: "Only during focus",
+      running: "Only while time is running",
+    },
+    floatSize: "Size",
+    floatSizeOption: { normal: "Normal", compact: "Compact" },
+    floatPreview: "Preview",
+    floatProblem: {
+      wayland: "On Wayland, an app can't stay on top of the others.",
+    },
+    desktop: "Desktop",
+    shortcut: "Global shortcut",
+    shortcutHint: "Ctrl/Cmd + Alt + Shift + T starts or pauses",
+    shortcutProblem: {
+      wayland: "The system didn't allow the shortcut: Wayland has no global shortcuts.",
+      taken: "The system didn't allow the shortcut: another app may already be using it.",
+      unknown: "The system didn't allow the shortcut.",
+    },
+    language: "Language",
+    languageSystem: "System",
+    restore: "Restore classic values",
+    save: "Save",
+    unsaved: {
+      title: "You have unsaved changes",
+      body: "If you leave now, your settings stay as they were.",
+      accept: "Leave without saving",
+      cancel: "Keep editing",
+    },
+  },
+
+  float: {
+    focus: "FOCUS",
+    paused: "PAUSED",
+    break: "BREAK",
+    open: (label, time) => `${label}, ${time}. Open Tomatito`,
+    pomodoroDone: (n) => `Pomodoro ${n} finished`,
+    rest: (duration) => `Click for a ${duration} break`,
+    restAction: "Take a break",
+    breakDone: "Break finished",
+    nextPomodoro: (n, total) => `Click for pomodoro ${n} of ${total}`,
+    newSession: "Click for a new session",
+    startAction: "Start",
+  },
+
+  notification: {
+    focusTitle: "Pomodoro finished",
+    focusBody: (duration) => `Time for a ${duration} short break.`,
+    breakTitle: "Break finished",
+    breakBody: (n, total) => `Next up: pomodoro ${n} of ${total}.`,
+  },
+
+  tray: {
+    show: "Show Tomatito",
+    quit: "Quit",
+    float: "Floating window",
+    noticeTitle: "Tomatito is still running",
+    noticeBody: "The timer keeps going. To close it completely, use “Quit” in the tray.",
+  },
+
+  boot: {
+    failed: "Tomatito couldn't open. Check that your browser allows saving data.",
+    otherTab: "Tomatito is already open in another tab.",
+  },
+};

@@ -2,6 +2,7 @@
 import { onBeforeUnmount, onMounted, ref, shallowRef, useTemplateRef, watch } from "vue";
 import FloatPill from "../components/FloatPill.vue";
 import type { FloatView } from "../core/float";
+import { setLocale } from "../i18n";
 import { act, connect, drag, layout } from "./bridge";
 
 /** Con menos movimiento que esto es un clic, no un arrastre. */
@@ -36,7 +37,10 @@ onMounted(() => {
   window.addEventListener("pointerup", onUp);
   window.addEventListener("pointercancel", onUp);
   connect(
-    (next) => (view.value = next),
+    (next) => {
+      setLocale(next.lang);
+      view.value = next;
+    },
     (next) => (docked.value = next),
   ).catch(console.error);
 });

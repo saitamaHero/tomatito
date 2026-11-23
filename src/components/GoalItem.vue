@@ -3,6 +3,7 @@ import { Check, Minus, Pencil, Plus, Trash2 } from "@lucide/vue";
 import { nextTick, ref, useTemplateRef } from "vue";
 import { MAX_ESTIMATE } from "../core/session";
 import type { Goal } from "../core/types";
+import { m } from "../i18n";
 
 const props = defineProps<{
   goal: Goal;
@@ -46,14 +47,14 @@ async function close(save: boolean) {
       @submit.prevent="close(true)"
       @keydown.esc.stop.prevent="close(false)"
     >
-      <input ref="input" v-model="text" class="field" aria-label="Texto del objetivo" />
+      <input ref="input" v-model="text" class="field" :aria-label="m.goal.text" />
       <div class="edit-row">
-        <span class="hint">Pomodoros</span>
-        <div class="est" role="group" aria-label="Pomodoros estimados">
+        <span class="hint">{{ m.goal.pomodoros }}</span>
+        <div class="est" role="group" :aria-label="m.goal.estimate">
           <button
             type="button"
             class="tool"
-            aria-label="Bajar estimación"
+            :aria-label="m.goal.less"
             :disabled="est <= 1"
             @click="est--"
           >
@@ -63,14 +64,14 @@ async function close(save: boolean) {
           <button
             type="button"
             class="tool"
-            aria-label="Subir estimación"
+            :aria-label="m.goal.more"
             :disabled="est >= MAX_ESTIMATE"
             @click="est++"
           >
             <Plus :size="16" aria-hidden="true" />
           </button>
         </div>
-        <button type="submit" class="tool save" aria-label="Guardar objetivo">
+        <button type="submit" class="tool save" :aria-label="m.goal.save">
           <Check :size="16" aria-hidden="true" />
         </button>
       </div>
@@ -85,7 +86,7 @@ async function close(save: boolean) {
         type="button"
         class="check"
         :aria-pressed="goal.done"
-        :aria-label="`${goal.done ? 'Marcar como pendiente' : 'Marcar como hecho'}: ${goal.text}`"
+        :aria-label="goal.done ? m.goal.markPending(goal.text) : m.goal.markDone(goal.text)"
         @click="emit('update', { done: !goal.done })"
       >
         <span :class="['box', { on: goal.done }]">
@@ -100,8 +101,8 @@ async function close(save: boolean) {
           ref="editButton"
           type="button"
           class="tool"
-          :aria-label="`Editar: ${goal.text}`"
-          title="Editar"
+          :aria-label="m.goal.editLabel(goal.text)"
+          :title="m.goal.edit"
           @click="edit"
         >
           <Pencil :size="15" aria-hidden="true" />
@@ -109,8 +110,8 @@ async function close(save: boolean) {
         <button
           type="button"
           class="tool"
-          :aria-label="`Borrar: ${goal.text}`"
-          title="Borrar"
+          :aria-label="m.goal.removeLabel(goal.text)"
+          :title="m.goal.remove"
           @click="emit('remove')"
         >
           <Trash2 :size="15" aria-hidden="true" />
@@ -119,7 +120,7 @@ async function close(save: boolean) {
       <span
         class="count"
         role="img"
-        :aria-label="`${goal.spent} de ${goal.est} pomodoros estimados`"
+        :aria-label="m.goal.spent(goal.spent, goal.est)"
       >
         {{ goal.spent }}/{{ goal.est }}
       </span>

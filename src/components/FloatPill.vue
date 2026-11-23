@@ -2,6 +2,7 @@
 import { Pause, Play } from "@lucide/vue";
 import { computed } from "vue";
 import type { FloatView } from "../core/float";
+import { m } from "../i18n";
 import PomodoroDots from "./PomodoroDots.vue";
 
 const props = defineProps<{
@@ -38,7 +39,7 @@ const offset = computed(() =>
     v-else-if="view.compact || docked"
     type="button"
     :class="['pill', 'compact', view.tone]"
-    :aria-label="`${view.label}, ${view.time}. Abrir Tomatito`"
+    :aria-label="m.float.open(view.label, view.time)"
     @click="$emit('open')"
   >
     <span class="dot" aria-hidden="true" />
@@ -64,7 +65,7 @@ const offset = computed(() =>
     <button
       type="button"
       class="face"
-      :aria-label="`${view.label}, ${view.time}. Abrir Tomatito`"
+      :aria-label="m.float.open(view.label, view.time)"
       @click="$emit('open')"
     >
       <span class="label">{{ view.label }}</span>

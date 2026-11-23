@@ -1,15 +1,25 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import { hour, toMinutes } from "../core/format";
-import type { Session } from "../core/types";
+import type { Segment, Session } from "../core/types";
+import { m } from "../i18n";
 
 const props = defineProps<{ session: Session }>();
 
 const label = computed(() =>
   props.session.segments
-    .map((s) => `${s.kind === "focus" ? "enfoque" : "descanso"} ${toMinutes(s.activeMs)} min`)
+    .map((s) => `${m.value.segment[s.kind]} ${m.value.minutes(toMinutes(s.activeMs))}`)
     .join(", "),
 );
+
+function describe({ kind, activeMs, startedAt, endedAt }: Segment): string {
+  const { segment, minutes } = m.value;
+  return [
+    segment[kind],
+    minutes(toMinutes(activeMs)),
+    `${hour(startedAt)} – ${hour(endedAt)}`,
+  ].join(" · ");
+}
 
 const end = computed(() => {
   const { segments } = props.session;
@@ -19,14 +29,14 @@ const end = computed(() => {
 
 <template>
   <section aria-labelledby="h-timeline">
-    <h3 id="h-timeline" class="title">Línea de tiempo</h3>
+    <h3 id="h-timeline" class="title">{{ m.detail.timeline }}</h3>
     <div class="track" role="img" :aria-label="label">
       <span
         v-for="(segment, i) in session.segments"
         :key="i"
         :class="['segment', segment.kind]"
         :style="{ flexGrow: segment.activeMs }"
-        :title="`${segment.kind === 'focus' ? 'Enfoque' : 'Descanso'} · ${toMinutes(segment.activeMs)} min · ${hour(segment.startedAt)} – ${hour(segment.endedAt)}`"
+        :title="describe(segment)"
       />
     </div>
     <div class="ends mono">
@@ -34,8 +44,8 @@ const end = computed(() => {
       <span v-if="end">{{ hour(end) }}</span>
     </div>
     <div class="legend hint">
-      <span><i class="key focus" />Enfoque</span>
-      <span><i class="key break" />Descanso</span>
+      <span><i class="key focus" />{{ m.segment.focus }}</span>
+      <span><i class="key break" />{{ m.segment.break }}</span>
     </div>
   </section>
 </template>

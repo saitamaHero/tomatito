@@ -22,6 +22,5 @@ defineProps<{ value: string; label: string }>();
   font-size: 22px;
   line-height: 28px;
   letter-spacing: -0.02em;
-  white-space: nowrap;
 }
 </style>

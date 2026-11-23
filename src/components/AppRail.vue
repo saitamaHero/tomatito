@@ -1,19 +1,20 @@
 <script setup lang="ts">
 import { History, SlidersHorizontal, Timer } from "@lucide/vue";
-import { useFocusStore } from "../stores/focus";
 import { clock } from "../core/format";
+import { m } from "../i18n";
+import { useFocusStore } from "../stores/focus";
 
 const focus = useFocusStore();
 
 const links = [
-  { name: "timer", label: "Temporizador", icon: Timer },
-  { name: "history", label: "Historial", icon: History },
-  { name: "settings", label: "Ajustes", icon: SlidersHorizontal },
-];
+  { name: "timer", icon: Timer },
+  { name: "history", icon: History },
+  { name: "settings", icon: SlidersHorizontal },
+] as const;
 </script>
 
 <template>
-  <nav class="rail" aria-label="Principal">
+  <nav class="rail" :aria-label="m.nav.label">
     <span class="mark" aria-hidden="true">T</span>
     <RouterLink
       v-for="link in links"
@@ -21,8 +22,8 @@ const links = [
       :to="{ name: link.name }"
       :class="['link', { active: $route.name === link.name }]"
       :aria-current="$route.name === link.name ? 'page' : undefined"
-      :aria-label="link.label"
-      :title="link.label"
+      :aria-label="m.nav[link.name]"
+      :title="m.nav[link.name]"
     >
       <component :is="link.icon" :size="22" aria-hidden="true" />
     </RouterLink>
@@ -30,7 +31,7 @@ const links = [
       v-if="$route.name !== 'timer' && focus.timer.status !== 'idle'"
       :to="{ name: 'timer' }"
       :class="['mini', 'mono', { break: focus.isBreak }]"
-      title="Volver al temporizador"
+      :title="m.nav.back"
     >
       {{ clock(focus.remainingMs) }}
     </RouterLink>

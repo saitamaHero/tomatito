@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from "vue";
 import type { Bar } from "../core/stats";
+import { m } from "../i18n";
 
 const props = defineProps<{
   bars: Bar[];
@@ -12,10 +13,11 @@ const PLOT = 96;
 
 const max = computed(() => Math.max(1, props.goal ?? 0, ...props.bars.map((b) => b.value)));
 const height = (value: number) => (value === 0 ? 2 : Math.max(4, (value / max.value) * PLOT));
-const label = computed(
-  () =>
-    `Pomodoros: ${props.bars.map((b) => `${b.label} ${b.value}`).join(", ")}` +
-    (props.goal ? `. Meta diaria: ${props.goal}` : ""),
+const label = computed(() =>
+  m.value.history.chartLabel(
+    props.bars.map((b) => `${b.label} ${b.value}`).join(", "),
+    props.goal,
+  ),
 );
 </script>
 
@@ -23,7 +25,7 @@ const label = computed(
   <div class="chart" role="img" :aria-label="label">
     <div class="plot" :style="{ height: `${PLOT + 22}px` }">
       <div v-if="goal" class="goal" :style="{ bottom: `${height(goal)}px` }">
-        <span class="goal-label">Meta {{ goal }}</span>
+        <span class="goal-label">{{ m.history.chartGoal(goal) }}</span>
       </div>
       <div v-for="(bar, i) in bars" :key="i" class="col">
         <span class="value mono">{{ bar.value }}</span>

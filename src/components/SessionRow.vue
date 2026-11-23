@@ -3,16 +3,18 @@ import { computed } from "vue";
 import { hour, toMinutes } from "../core/format";
 import { focusMs, goalsDone, sessionTitle } from "../core/session";
 import type { Session } from "../core/types";
+import { m } from "../i18n";
 import PomodoroDots from "./PomodoroDots.vue";
 
 const props = defineProps<{ session: Session; selected: boolean }>();
 
 const meta = computed(() => {
   const s = props.session;
-  const parts = [
-    s.endedAt === null ? `${hour(s.startedAt!)} · En curso` : `${hour(s.startedAt!)} – ${hour(s.endedAt)}`,
-  ];
-  if (s.goals.length) parts.push(`${goalsDone(s)}/${s.goals.length} objetivos`);
+  const parts =
+    s.endedAt === null
+      ? [hour(s.startedAt!), m.value.history.inProgress]
+      : [`${hour(s.startedAt!)} – ${hour(s.endedAt)}`];
+  if (s.goals.length) parts.push(m.value.history.goalsDone(goalsDone(s), s.goals.length));
   return parts.join(" · ");
 });
 </script>
@@ -24,12 +26,12 @@ const meta = computed(() => {
     :aria-current="selected ? 'true' : undefined"
   >
     <span class="texts">
-      <span class="title">{{ sessionTitle(session) }}</span>
+      <span class="title">{{ sessionTitle(session) ?? m.history.untitled }}</span>
       <span class="hint">{{ meta }}</span>
     </span>
     <span class="side">
       <PomodoroDots :done="session.done" :total="session.rounds" :size="8" />
-      <span class="count">{{ toMinutes(focusMs(session)) }} min</span>
+      <span class="count">{{ m.minutes(toMinutes(focusMs(session))) }}</span>
     </span>
   </RouterLink>
 </template>
