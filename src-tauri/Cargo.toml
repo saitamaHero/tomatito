@@ -1,8 +1,10 @@
 [package]
 name = "tomatito"
 version = "0.1.0"
-description = "Pomodoro minimalista para escritorio y web"
-authors = ["you"]
+description = "A minimalist Pomodoro timer for desktop and web"
+authors = ["Dionicio Acevedo"]
+license = "MIT"
+repository = "https://github.com/saitamaHero/tomatito"
 edition = "2024"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html

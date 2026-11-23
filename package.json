@@ -2,6 +2,12 @@
   "name": "tomatito",
   "private": true,
   "version": "0.1.0",
+  "description": "A minimalist Pomodoro timer for desktop and web",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/saitamaHero/tomatito.git"
+  },
   "type": "module",
   "scripts": {
     "dev": "vite",

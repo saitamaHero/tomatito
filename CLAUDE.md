@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 `tomatito` is a Pomodoro timer for **desktop and web** from one codebase: a Vue 3 + TypeScript frontend (`src/`) built with Vite, and a Tauri 2 Rust backend (`src-tauri/`, edition 2024). Mobile is out of scope: no Android/iOS targets or touch layouts. Minimum supported width is 480 px.
 
-The app is in English and Spanish; code comments are in Spanish. Data is local only (IndexedDB on both platforms), with no accounts or sync.
+The app is in English and Spanish. Write new code comments in English; the existing ones in Spanish stay until their code changes. Data is local only (IndexedDB on both platforms), with no accounts or sync.
 
 ## Commands
 
@@ -64,7 +64,7 @@ There is no frontend linter or formatter. TypeScript strictness (`strict`, `noUn
 
 **Permissions.** `src-tauri/capabilities/default.json` controls which core and plugin APIs the main window may call; `float.json` does it for the floating window, which only gets events. A plugin the frontend calls takes four coordinated changes: the crate in `Cargo.toml`, the npm package in `package.json`, `.plugin(...)` in `lib.rs`, and its permission in `capabilities/default.json`. Plugins used only from Rust (global-shortcut, single-instance, window-state) need just the crate and `.plugin(...)`. `src-tauri/gen/schemas/` is generated; don't edit it.
 
-**Icons.** `src-tauri/icons/icon.svg` is the source (same drawing as `public/favicon.svg`); `docs/logo.svg` is the README logo. `pnpm tauri icon src-tauri/icons/icon.svg -o <temp dir>` generates the set: copy only the files already in `icons/`, since it also makes Android and iOS ones. `icon.icns` comes from the same SVG with `viewBox="93.02 101.22 477.18 477.18"`, because macOS expects a margin. Cargo doesn't notice icon changes: touch `src-tauri/src/lib.rs` to rebuild with them.
+**Icons.** `src-tauri/icons/icon.svg` is the source (same drawing as `public/favicon.svg`); `docs/logo.svg` and `docs/logo-dark.svg` are the README logos, for light and dark. `pnpm tauri icon src-tauri/icons/icon.svg -o <temp dir>` generates the set: copy only the files already in `icons/`, since it also makes Android and iOS ones. `icon.icns` comes from the same SVG with `viewBox="93.02 101.22 477.18 477.18"`, because macOS expects a margin. Cargo doesn't notice icon changes: touch `src-tauri/src/lib.rs` to rebuild with them.
 
 **Dev server.** The port is fixed at 1420 with `strictPort` (HMR on 1421 when `TAURI_DEV_HOST` is set). `vite.config.ts` and `devUrl` in `tauri.conf.json` must agree.
 

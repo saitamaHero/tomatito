@@ -1,0 +1,79 @@
+name: Bug report
+description: Something doesn't work as it should
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting it. You can write in English or Spanish.
+        Please check first that nobody has [reported it already](https://github.com/saitamaHero/tomatito/issues).
+  - type: textarea
+    id: actual
+    attributes:
+      label: What happens?
+      description: A screenshot or recording helps, if it's something you can see.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce it
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: dropdown
+    id: app
+    attributes:
+      label: Where does it happen?
+      options:
+        - Desktop app
+        - Web app
+        - Both
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux (X11)
+        - Linux (Wayland)
+        - Linux (not sure which)
+        - Windows
+        - macOS
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: details
+    attributes:
+      label: Version details
+      description: System version, and the desktop environment or browser.
+      placeholder: "Example: Ubuntu 24.04 with KDE Plasma, or Firefox 145 on Windows 11"
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or version of Tomatito
+      description: The output of `git rev-parse --short HEAD`.
+  - type: dropdown
+    id: language
+    attributes:
+      label: Language of the app
+      options:
+        - English
+        - Español
+  - type: textarea
+    id: logs
+    attributes:
+      label: Messages in the terminal or the browser console
+      description: Remove anything private before pasting it.
+      render: text
