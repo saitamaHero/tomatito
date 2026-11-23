@@ -22,7 +22,7 @@ withDefaults(defineProps<{ done: number; total: number; size?: number }>(), { si
 .dot {
   width: var(--dot);
   height: var(--dot);
-  border: 2px solid var(--ink-muted);
+  border: clamp(1.5px, calc(var(--dot) * 0.25), 2px) solid var(--ink-muted);
   border-radius: var(--radius-full);
   transition: background-color 200ms;
 }

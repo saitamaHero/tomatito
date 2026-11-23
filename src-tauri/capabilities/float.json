@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "float",
+  "description": "Ventana flotante: solo recibe eventos",
+  "windows": ["float"],
+  "permissions": ["core:event:default"]
+}

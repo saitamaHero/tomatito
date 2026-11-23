@@ -8,6 +8,13 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig(() => ({
   plugins: [vue()],
 
+  build: {
+    rolldownOptions: {
+      // La ventana flotante solo existe en escritorio.
+      input: process.env.TAURI_ENV_PLATFORM ? ["index.html", "flotante.html"] : "index.html",
+    },
+  },
+
   test: {
     include: ["src/**/*.test.ts"],
   },

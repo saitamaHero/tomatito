@@ -1,0 +1,13 @@
+/* La ventana es transparente: solo se ve la píldora. */
+:root {
+  background: transparent;
+}
+
+html,
+body {
+  overflow: hidden;
+}
+
+body {
+  background: transparent;
+}

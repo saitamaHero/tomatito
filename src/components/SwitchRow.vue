@@ -1,7 +1,12 @@
 <script setup lang="ts">
 import { useId } from "vue";
 
-defineProps<{ label: string; hint?: string }>();
+defineProps<{
+  label: string;
+  hint?: string;
+  /** La etiqueta es el título de la tarjeta. */
+  heading?: boolean;
+}>();
 const on = defineModel<boolean>({ required: true });
 const id = useId();
 </script>
@@ -9,7 +14,9 @@ const id = useId();
 <template>
   <div class="row">
     <span class="texts">
-      <span :id="id" class="label">{{ label }}</span>
+      <component :is="heading ? 'h2' : 'span'" :id="id" :class="['label', { heading }]">
+        {{ label }}
+      </component>
       <span v-if="hint" class="hint">{{ hint }}</span>
     </span>
     <button
@@ -42,6 +49,12 @@ const id = useId();
 .label {
   font-size: 15px;
   line-height: 22px;
+}
+
+.heading {
+  font-size: 16px;
+  line-height: 24px;
+  font-weight: 600;
 }
 
 .track {

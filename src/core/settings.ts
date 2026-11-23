@@ -1,4 +1,4 @@
-import type { Phase, Settings } from "./types";
+import type { FloatSize, FloatWhen, Phase, Settings } from "./types";
 
 export const DEFAULT_SETTINGS: Settings = {
   focus: 25,
@@ -11,7 +11,21 @@ export const DEFAULT_SETTINGS: Settings = {
   sound: true,
   notify: true,
   globalShortcut: true,
+  float: true,
+  floatWhen: "always",
+  floatSize: "normal",
 };
+
+export const FLOAT_WHEN: { value: FloatWhen; label: string }[] = [
+  { value: "always", label: "Al salir de la app" },
+  { value: "focus", label: "Solo en enfoque" },
+  { value: "running", label: "Solo si corre el tiempo" },
+];
+
+export const FLOAT_SIZE: { value: FloatSize; label: string }[] = [
+  { value: "normal", label: "Normal" },
+  { value: "compact", label: "Compacta" },
+];
 
 export type NumericSetting = "focus" | "short" | "long" | "rounds" | "dailyGoal";
 
@@ -57,6 +71,12 @@ export function normalizeSettings(stored: Partial<Settings> | null | undefined):
     merged[key] = Number.isFinite(value)
       ? Math.min(max, Math.max(min, Math.round(value)))
       : DEFAULT_SETTINGS[key];
+  }
+  if (!FLOAT_WHEN.some((o) => o.value === merged.floatWhen)) {
+    merged.floatWhen = DEFAULT_SETTINGS.floatWhen;
+  }
+  if (!FLOAT_SIZE.some((o) => o.value === merged.floatSize)) {
+    merged.floatSize = DEFAULT_SETTINGS.floatSize;
   }
   return merged;
 }

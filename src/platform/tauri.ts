@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import {
   isPermissionGranted,
   requestPermission,
@@ -26,6 +27,25 @@ export const platform: Platform = {
     listen<DesktopAction>("desktop-action", (event) => handler(event.payload)).catch(
       console.error,
     );
+  },
+
+  onBackground(handler) {
+    const main = getCurrentWindow();
+    main.onFocusChanged(({ payload: focused }) => handler(!focused)).catch(console.error);
+    // Al mostrarla a propósito ya se ha vuelto, aunque el sistema no le dé el foco.
+    listen("main-shown", () => handler(false)).catch(console.error);
+    main
+      .isFocused()
+      .then((focused) => handler(!focused))
+      .catch(console.error);
+  },
+
+  setFloat(view) {
+    invoke("update_float", { view }).catch(console.error);
+  },
+
+  floatProblem() {
+    return invoke<string | null>("float_problem");
   },
 
   async setGlobalShortcut(enabled) {

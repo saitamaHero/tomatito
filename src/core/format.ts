@@ -1,4 +1,4 @@
-import type { Phase } from "./types";
+import type { Phase, TimerState } from "./types";
 
 export const PHASES: Phase[] = ["focus", "short", "long"];
 
@@ -6,6 +6,12 @@ export const PHASE_LABEL: Record<Phase, string> = {
   focus: "Enfoque",
   short: "Descanso corto",
   long: "Descanso largo",
+};
+
+export const TOGGLE_LABEL: Record<TimerState["status"], string> = {
+  idle: "Empezar",
+  running: "Pausar",
+  paused: "Seguir",
 };
 
 const WEEKDAYS = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];

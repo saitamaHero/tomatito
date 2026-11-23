@@ -1,4 +1,6 @@
 mod desktop;
+mod float;
+mod geometry;
 
 use tauri_plugin_window_state::StateFlags;
 
@@ -14,11 +16,20 @@ pub fn run() {
             // Sin VISIBLE: si se sale con la ventana oculta, al volver debe verse.
             tauri_plugin_window_state::Builder::default()
                 .with_state_flags(StateFlags::SIZE | StateFlags::POSITION | StateFlags::MAXIMIZED)
+                // La flotante guarda su propia posición.
+                .with_denylist(&[float::LABEL])
                 .build(),
         )
+        .manage(float::Float::default())
         .invoke_handler(tauri::generate_handler![
             desktop::update_tray,
-            desktop::set_global_shortcut
+            desktop::set_global_shortcut,
+            float::update_float,
+            float::float_problem,
+            float::float_ready,
+            float::float_layout,
+            float::float_drag,
+            float::float_action
         ])
         .setup(|app| {
             if let Err(error) = desktop::create_tray(app.handle()) {

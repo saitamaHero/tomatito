@@ -24,6 +24,14 @@ export const platform: Platform = {
 
   onAction() {},
 
+  onBackground() {},
+
+  setFloat() {},
+
+  async floatProblem() {
+    return null;
+  },
+
   async setGlobalShortcut() {
     return null;
   },

@@ -1,5 +1,9 @@
 export type Phase = "focus" | "short" | "long";
 
+/** Cuándo se ve la ventana flotante, siempre con el usuario en otra app. */
+export type FloatWhen = "always" | "focus" | "running";
+export type FloatSize = "normal" | "compact";
+
 export interface Settings {
   /** Minutos. */
   focus: number;
@@ -15,6 +19,10 @@ export interface Settings {
   notify: boolean;
   /** Solo se usa en desktop. */
   globalShortcut: boolean;
+  /** Ventana flotante; solo se usa en desktop. */
+  float: boolean;
+  floatWhen: FloatWhen;
+  floatSize: FloatSize;
 }
 
 export interface Goal {
